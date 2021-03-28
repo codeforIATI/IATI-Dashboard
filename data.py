@@ -246,7 +246,7 @@ def transform_codelist_mapping_keys(codelist_mapping):
 
 def create_codelist_mapping(major_version):
     codelist_mapping = {}
-    for x in json.load(open('data/IATI-Codelists-{}/out/clv2/mapping.json'.format(major_version))):
+    for x in json.load(open('data/IATI-Codelists-{}/mapping.json'.format(major_version))):
         if 'condition' in x:
             pref, attr = x['path'].rsplit('/', 1)
             path = '{0}[{1}]/{2}'.format(
@@ -264,7 +264,7 @@ codelist_mapping = {v: create_codelist_mapping(v) for v in MAJOR_VERSIONS}
 # Create a big dictionary of all codelist values by version and codelist name
 codelist_sets = {
     major_version: {
-        cname: set(c['code'] for c in codelist['data']) for cname, codelist in JSONDir('data/IATI-Codelists-{}/out/clv2/json/en/'.format(major_version)).items()
+        cname: set(c['code'] for c in codelist['data']) for cname, codelist in JSONDir('data/IATI-Codelists-{}/json/en/'.format(major_version)).items()
     } for major_version in MAJOR_VERSIONS}
 
 

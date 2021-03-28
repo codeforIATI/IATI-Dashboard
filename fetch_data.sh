@@ -27,29 +27,22 @@ done > ../history.csv
 echo "cloned and checked out download errors"
 cd ../../../
 
-# Get codelists for versions v1.x and v2.x of the IATI Standard
-cd data
-echo "cloning Codelists-1"
-if [ ! -d IATI-Codelists-1 ]; then
-    git clone https://github.com/IATI/IATI-Codelists.git IATI-Codelists-1
-fi
-cd IATI-Codelists-1
-echo "checking out Codelists-1"
-git checkout version-1.05 > /dev/null
-git pull > /dev/null
-echo "running gen.sh for Codelist-1"
-./gen.sh
+rm -rf data/IATI-Codelists-1 data/IATI-Codelists-2 data/IATI-Codelists-NonEmbedded
+echo "cloning IATI-Codelists-NonEmbedded"
+git clone --branch master https://github.com/codeforIATI/IATI-Codelists-NonEmbedded.git data/IATI-Codelists-NonEmbedded
 
-cd ..
+echo "cloning Codelists-1"
+git clone --branch version-1.05 https://github.com/IATI/IATI-Codelists.git data/IATI-Codelists-1
+mkdir data/IATI-Codelists-1/combined-xml
+cp data/IATI-Codelists-1/xml/* data/IATI-Codelists-1/combined-xml
+cp data/IATI-Codelists-NonEmbedded/xml/* data/IATI-Codelists-1/combined-xml
+python mappings_to_json.py data/IATI-Codelists-1/mapping.xml > data/IATI-Codelists-1/mapping.json
+
 echo "cloning Codelists-2"
-if [ ! -d IATI-Codelists-2 ]; then
-    git clone https://github.com/andylolz/IATI-Codelists.git IATI-Codelists-2
-fi
-cd IATI-Codelists-2
-echo "checking out Codelists-2"
-git checkout version-2.03 > /dev/null
-git pull > /dev/null
-echo "running gen.sh for Codelist-2"
-./gen.sh
+git clone --branch version-2.03 https://github.com/andylolz/IATI-Codelists.git data/IATI-Codelists-2
+mkdir data/IATI-Codelists-2/combined-xml
+cp data/IATI-Codelists-2/xml/* data/IATI-Codelists-2/combined-xml
+cp data/IATI-Codelists-NonEmbedded/xml/* data/IATI-Codelists-2/combined-xml
+python mappings_to_json.py data/IATI-Codelists-2/mapping.xml > data/IATI-Codelists-2/mapping.json
 
 echo "completed fetching data"
