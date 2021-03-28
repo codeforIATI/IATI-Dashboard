@@ -27,9 +27,11 @@ done > ../history.csv
 echo "cloned and checked out download errors"
 cd ../../../
 
-rm -rf data/IATI-Codelists-1 data/IATI-Codelists-2 data/IATI-Codelists-NonEmbedded
+rm -rf data/IATI-Codelists-1 data/IATI-Codelists-2 data/Unofficial-Codelists data/IATI-Codelists-NonEmbedded
 echo "cloning IATI-Codelists-NonEmbedded"
 git clone --branch master https://github.com/codeforIATI/IATI-Codelists-NonEmbedded.git data/IATI-Codelists-NonEmbedded
+echo "cloning Unofficial-Codelists"
+git clone --branch master https://github.com/codeforIATI/Unofficial-Codelists.git data/Unofficial-Codelists
 
 echo "cloning Codelists-1"
 git clone --branch version-1.05 https://github.com/IATI/IATI-Codelists.git data/IATI-Codelists-1
@@ -43,6 +45,7 @@ git clone --branch version-2.03 https://github.com/andylolz/IATI-Codelists.git d
 mkdir data/IATI-Codelists-2/combined-xml
 cp data/IATI-Codelists-2/xml/* data/IATI-Codelists-2/combined-xml
 cp data/IATI-Codelists-NonEmbedded/xml/* data/IATI-Codelists-2/combined-xml
-python mappings_to_json.py data/IATI-Codelists-2/mapping.xml > data/IATI-Codelists-2/mapping.json
+cp data/Unofficial-Codelists/xml/* data/IATI-Codelists-2/combined-xml
+python mappings_to_json.py data/IATI-Codelists-2/mapping.xml data/Unofficial-Codelists/mapping.xml > data/IATI-Codelists-2/mapping.json
 
 echo "completed fetching data"
