@@ -1,6 +1,6 @@
 # This file converts raw timeliness data into the associated Publishing Statistics assessments
 
-from data import JSONDir, publisher_name, get_publisher_stats, get_registry_id_matches
+from data import JSONDir, GitJSONDir, publisher_name, get_publisher_stats, get_registry_id_matches
 import datetime
 from dateutil.relativedelta import relativedelta
 from collections import defaultdict, Counter
@@ -51,16 +51,18 @@ previous_month_days = [today - relativedelta(months=x) for x in range(1, 13)]
 this_month_number = datetime.datetime.today().month
 this_year = datetime.datetime.today().year
 
+# Load all the data from 'gitaggregate-publisher-dated' into memory
+historical_publishers = JSONDir('./data/historical/gitaggregate-publisher-dated')
+gitaggregate_publishers = GitJSONDir(
+    'current/aggregated-publisher/', './stats-calculated/')
+
 
 def publisher_frequency():
     """Generate the publisher frequency data
     """
 
-    # Load all the data from 'gitaggregate-publisher-dated' into memory
-    gitaggregate_publisher = JSONDir('./stats-calculated/gitaggregate-publisher-dated')
-
     # Loop over each publisher - i.e. a publisher folder within 'gitaggregate-publisher-dated'
-    for publisher, agg in gitaggregate_publisher.items():
+    for publisher, agg in gitaggregate_publishers.items():
 
         # Skip to the next publisher if there is no data for 'most_recent_transaction_date' for this publisher
         if 'most_recent_transaction_date' not in agg:
@@ -74,7 +76,9 @@ def publisher_frequency():
         previous_transaction_date = datetime.date(1, 1, 1)
 
         # Find the most recent transaction date and parse into a datetime object
-        for gitdate, transaction_date_str in sorted(agg['most_recent_transaction_date'].items()):
+        historical_publisher = historical_publishers.get(publisher, {})
+        sorted_first_transactions = sorted({**agg['most_recent_transaction_date'], **historical_publisher.get('most_recent_transaction_date', {})}.items())
+        for gitdate, transaction_date_str in sorted_first_transactions:
             transaction_date = parse_iso_date(transaction_date_str)
 
             # If transaction date has increased
@@ -83,7 +87,7 @@ def publisher_frequency():
                 updates_per_month[gitdate[:7]] += 1
 
         # Find the first date that this publisher made data available, and parse into a datetime object
-        first_published_string = sorted(agg['most_recent_transaction_date'])[0]
+        first_published_string = sorted_first_transactions[0][0]
         first_published = parse_iso_date(first_published_string)
 
         # Implement the assessment logic on https://analytics.codeforiati.org/timeliness.html#h_assesment
@@ -156,14 +160,14 @@ def timelag_index(timelag):
 
 
 def publisher_timelag_sorted():
-    publisher_timelags = [(publisher, publisher_name.get(publisher), agg['transaction_months_with_year'], agg['timelag']) for publisher, agg in JSONDir('./stats-calculated/current/aggregated-publisher').items()]
+    publisher_timelags = [(publisher, publisher_name.get(publisher), {**historical_publishers.get(publisher, {}).get('transaction_months_with_year', {}), **agg['transaction_months_with_year']}, {**historical_publishers.get(publisher, {}).get('timelag', {}), **agg['timelag']}) for publisher, agg in gitaggregate_publishers]
     return sorted(
         publisher_timelags,
         key=lambda tup: (timelag_index(tup[3]), tup[1]))
 
 
 def publisher_timelag_dict():
-    publisher_timelags = [(publisher, publisher_name.get(publisher), agg['transaction_months_with_year'], agg['timelag']) for publisher, agg in JSONDir('./stats-calculated/current/aggregated-publisher').items()]
+    publisher_timelags = [(publisher, publisher_name.get(publisher), {**historical_publishers.get(publisher, {}).get('transaction_months_with_year', {}), **agg['transaction_months_with_year']}, {**historical_publishers.get(publisher, {}).get('timelag', {}), **agg['timelag']}) for publisher, agg in gitaggregate_publishers]
     data = {}
     for v in publisher_timelags:
         data[v[0]] = v
@@ -172,9 +176,6 @@ def publisher_timelag_dict():
 
 def publisher_timelag_summary():
     return Counter(timelag for _, _, _, timelag in publisher_timelag_sorted())
-
-
-blacklist_publisher = JSONDir('./stats-blacklist/gitaggregate-publisher-dated')
 
 
 def has_future_transactions(publisher):
@@ -192,11 +193,11 @@ def has_future_transactions(publisher):
                 transaction_date = parse_iso_date(transaction_date_string)
                 if transaction_date and transaction_date > datetime.date.today():
                     return 2
-    if publisher not in blacklist_publisher:
+    if publisher not in gitaggregate_publishers and publisher not in historical_publishers:
         return -1
     today = datetime.date.today()
     mindate = datetime.date(today.year - 1, today.month, 1)
-    for date, activity_blacklist in blacklist_publisher[publisher]['activities_with_future_transactions'].items():
+    for date, activity_blacklist in {**historical_publishers.get(publisher, {}).get('activities_with_future_transactions', {}), **gitaggregate_publishers[publisher]['activities_with_future_transactions']}.items():
         if parse_iso_date(date) >= mindate and activity_blacklist:
             return 1
     return 0
