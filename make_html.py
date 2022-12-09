@@ -167,19 +167,19 @@ app.jinja_env.globals['is_valid_element'] = is_valid_element
 
 basic_page_names = [
     'headlines',
-    'data_quality',
-    'exploring_data',
+    'data-quality',
+    'exploring-data',
     'publishers',
-    'publishing_stats',
+    'publishing-stats',
     'timeliness',
-    'timeliness_timelag',
+    'timeliness-timelag',
     'forwardlooking',
     'comprehensiveness',
-    'comprehensiveness_core',
-    'comprehensiveness_financials',
-    'comprehensiveness_valueadded',
+    'comprehensiveness-core',
+    'comprehensiveness-financials',
+    'comprehensiveness-valueadded',
     # 'coverage',
-    'summary_stats',
+    'summary-stats',
     'humanitarian',
     'files',
     'activities',
@@ -189,18 +189,18 @@ basic_page_names = [
     'versions',
     'organisation',
     'identifiers',
-    'reporting_orgs',
+    'reporting-orgs',
     'elements',
     'codelists',
     'booleans',
     'dates',
     'traceability',
-    'org_ids',
+    'org-ids',
     'faq',
 ]
 
 
-@app.route('/<page_name>.html')
+@app.route('/<page_name>/')
 def basic_page(page_name):
     if page_name in basic_page_names:
         kwargs = {}
@@ -216,15 +216,15 @@ def basic_page(page_name):
         elif page_name.startswith('coverage'):
             # kwargs['coverage'] = coverage
             parent_page_name = 'coverage'
-        elif page_name.startswith('summary_stats'):
+        elif page_name.startswith('summary-stats'):
             kwargs['summary_stats'] = summary_stats
-            parent_page_name = 'summary_stats'
+            parent_page_name = 'summary-stats'
         elif page_name.startswith('humanitarian'):
             kwargs['humanitarian'] = humanitarian
             parent_page_name = 'humanitarian'
         else:
             parent_page_name = page_name
-        return render_template(page_name + '.html', page=parent_page_name, **kwargs)
+        return render_template(page_name.replace('-', '_') + '.html', page=parent_page_name, **kwargs)
     else:
         abort(404)
 
@@ -239,11 +239,11 @@ def homepage():
     return render_template('index.html', page='index')
 
 
-app.add_url_rule('/licenses.html', 'licenses', licenses.main)
-app.add_url_rule('/license/<license>.html', 'licenses_individual_license', licenses.individual_license)
+app.add_url_rule('/licenses/', 'licenses', licenses.main)
+app.add_url_rule('/license/<license>/', 'licenses_individual_license', licenses.individual_license)
 
 
-@app.route('/publisher/<publisher>.html')
+@app.route('/publisher/<publisher>/')
 def publisher(publisher):
     publisher_stats = get_publisher_stats(publisher)
     try:
@@ -276,7 +276,7 @@ def publisher(publisher):
                            budget_table=budget_table,)
 
 
-@app.route('/codelist/<major_version>/<slug>.html')
+@app.route('/codelist/<major_version>/<slug>/')
 def codelist(major_version, slug):
     i = slugs['codelist'][major_version]['by_slug'][slug]
     element = list(current_stats['inverted_publisher']['codelist_values_by_major_version'][major_version])[i]
@@ -289,7 +289,7 @@ def codelist(major_version, slug):
                            page='codelists')
 
 
-@app.route('/element/<slug>.html')
+@app.route('/element/<slug>/')
 def element(slug):
     i = slugs['element']['by_slug'][slug]
     element = list(current_stats['inverted_publisher']['elements'])[i]
@@ -301,7 +301,7 @@ def element(slug):
                            page='elements')
 
 
-@app.route('/org_type/<slug>.html')
+@app.route('/org-type/<slug>/')
 def org_type(slug):
     assert slug in slugs['org_type']['by_slug']
     return render_template('org_type.html',
@@ -309,7 +309,7 @@ def org_type(slug):
                            page='org_ids')
 
 
-@app.route('/registration_agencies.html')
+@app.route('/registration-agencies/')
 def registration_agencies():
     registration_agencies = defaultdict(int)
     registration_agencies_publishers = defaultdict(list)
@@ -344,6 +344,25 @@ def image_development_publisher(image):
     return send_from_directory('out/publisher_imgs', image + '.png')
 
 
+@app.route('/<page>.html')
+def redirect_listing(page):
+    url = '/{page}/'.format(
+        page=page.replace('_', '-'),
+    )
+    return render_template('redirect.html',
+                           url=url)
+
+
+@app.route('/<page>/<path:path>.html')
+def redirect_detail(page, path):
+    url = '/{page}/{path}/'.format(
+        page=page.replace('_', '-'),
+        path=path,
+    )
+    return render_template('redirect.html',
+                           url=url)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--live", action="store_true",
@@ -365,19 +384,28 @@ if __name__ == '__main__':
         def url_generator():
             for page_name in basic_page_names:
                 yield 'basic_page', {'page_name': page_name}
+                yield 'redirect_listing', {'page': page_name.replace('-', '_')}
             for publisher in current_stats['inverted_publisher']['activities'].keys():
                 yield 'publisher', {'publisher': publisher}
+                yield 'redirect_detail', {'page': 'publisher', 'path': publisher}
             for slug in slugs['element']['by_slug']:
                 yield 'element', {'slug': slug}
+                yield 'redirect_detail', {'page': 'element', 'path': slug}
             for major_version, codelist_slugs in slugs['codelist'].items():
                 for slug in codelist_slugs['by_slug']:
                     yield 'codelist', {
+                        'major_version': major_version,
                         'slug': slug,
-                        'major_version': major_version
                     }
+                    yield 'redirect_detail', {'page': 'codelist', 'path': major_version + '/' + slug}
             for slug in slugs['org_type']['by_slug']:
                 yield 'org_type', {'slug': slug}
+                yield 'redirect_detail', {'page': 'org_type', 'path': slug}
             for license in set(licenses.licenses):
                 yield 'licenses_individual_license', {'license': license}
+                yield 'redirect_detail', {'page': 'license', 'path': license}
+
+            yield 'redirect_listing', {'page': 'licenses'}
+            yield 'redirect_listing', {'page': 'registration_agencies'}
 
         freezer.freeze()
