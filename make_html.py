@@ -397,7 +397,7 @@ if __name__ == '__main__':
                         'slug': slug,
                         'major_version': major_version
                     }
-                    yield 'redirect_detail', {'page': 'codelist', 'path': slug + '/' + major_version}
+                    yield 'redirect_detail', {'page': 'codelist', 'path': major_version + '/' + slug}
             for slug in slugs['org_type']['by_slug']:
                 yield 'org_type', {'slug': slug}
                 yield 'redirect_detail', {'page': 'org_type', 'path': slug}
