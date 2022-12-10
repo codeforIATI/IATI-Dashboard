@@ -394,8 +394,8 @@ if __name__ == '__main__':
             for major_version, codelist_slugs in slugs['codelist'].items():
                 for slug in codelist_slugs['by_slug']:
                     yield 'codelist', {
-                        'slug': slug,
                         'major_version': major_version
+                        'slug': slug,
                     }
                     yield 'redirect_detail', {'page': 'codelist', 'path': major_version + '/' + slug}
             for slug in slugs['org_type']['by_slug']:
