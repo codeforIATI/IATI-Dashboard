@@ -216,15 +216,15 @@ def basic_page(page_name):
         elif page_name.startswith('coverage'):
             # kwargs['coverage'] = coverage
             parent_page_name = 'coverage'
-        elif page_name.startswith('summary_stats'):
+        elif page_name.startswith('summary-stats'):
             kwargs['summary_stats'] = summary_stats
-            parent_page_name = 'summary_stats'
+            parent_page_name = 'summary-stats'
         elif page_name.startswith('humanitarian'):
             kwargs['humanitarian'] = humanitarian
             parent_page_name = 'humanitarian'
         else:
             parent_page_name = page_name
-        return render_template(page_name + '.html', page=parent_page_name, **kwargs)
+        return render_template(page_name.replace('-', '_') + '.html', page=parent_page_name, **kwargs)
     else:
         abort(404)
 
