@@ -347,7 +347,7 @@ def image_development_publisher(image):
 @app.route('/<page>.html')
 def redirect_listing(page):
     url = '/{page}/'.format(
-        page=page.replace('-', '_'),
+        page=page.replace('_', '-'),
     )
     return render_template('redirect.html',
                            url=url)
@@ -356,7 +356,7 @@ def redirect_listing(page):
 @app.route('/<page>/<path:path>.html')
 def redirect_detail(page, path):
     url = '/{page}/{path}/'.format(
-        page=page.replace('-', '_'),
+        page=page.replace('_', '-'),
         path=path,
     )
     return render_template('redirect.html',
@@ -384,7 +384,7 @@ if __name__ == '__main__':
         def url_generator():
             for page_name in basic_page_names:
                 yield 'basic_page', {'page_name': page_name}
-                yield 'redirect_listing', {'page': page_name}
+                yield 'redirect_listing', {'page': page_name.replace('-', '_')}
             for publisher in current_stats['inverted_publisher']['activities'].keys():
                 yield 'publisher', {'publisher': publisher}
                 yield 'redirect_detail', {'page': 'publisher', 'path': publisher}
