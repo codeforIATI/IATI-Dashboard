@@ -65,11 +65,12 @@
         <p>
         {% with elements=reverse_codelist_mapping[major_version][codelist_mapping[major_version][element]] %}
         {% if elements|count > 1 %}
+        {% with slug_list=slugs.codelist[major_version].by_i[current_stats.inverted_publisher.codelist_values_by_major_version[major_version].keys()|list %}
         Other elements/attributes on this codelist:
         <ul>
         {% for el in elements %}
         {% if el in current_stats.inverted_publisher.codelist_values_by_major_version[major_version].keys() %}
-        {% if el != element %}<li><a href="{{ url_for('codelist', major_version=major_version, slug=slugs.codelist[major_version].by_i[current_stats.inverted_publisher.codelist_values_by_major_version[major_version].keys().index(el)]) }}">{{ el }}</a></li>{% endif %}
+        {% if el != element %}<li><a href="{{ url_for('codelist', major_version=major_version, slug=slug_list.index(el)]) }}">{{ el }}</a></li>{% endif %}
         {% endif %}
         {% endfor %}
         </ul>
