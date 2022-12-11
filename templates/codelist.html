@@ -69,7 +69,7 @@
         Other elements/attributes on this codelist:
         <ul>
         {% for el in elements %}
-        {% if el != element and el in element_list %}<li><a href="{{ url_for('codelist', major_version=major_version, slug=slugs.codelist[major_version].by_i[element_list.index(el)]]) }}">{{ el }}</a></li>{% endif %}
+        {% if el != element and el in element_list %}<li><a href="{{ url_for('codelist', major_version=major_version, slug=slugs.codelist[major_version].by_i[element_list.index(el)]) }}">{{ el }}</a></li>{% endif %}
         {% endfor %}
         </ul>
         {% endwith %}
